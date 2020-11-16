@@ -19,7 +19,7 @@ Thanks for taking time to read this document. Here we aim to outline a set of ru
 
 For the purpose of this document are terms ```Function block``` and ```class``` **interchangeable**.
 
-### A General note on naming
+### A general note on naming
 
 Names should be self-describing, readable considered in calling context.
 
@@ -29,7 +29,7 @@ These library projects use exclusively Structured Test (ST) language.
 
 ## Naming overview
 
-> **Type Naming**
+### Type Naming
 
 --------
 |   Block type   |  Notation  |    Prefix     |                       Example                        |
@@ -41,9 +41,7 @@ These library projects use exclusively Structured Test (ST) language.
 | STRUCT name    | PascalCase | NoPrefix      | ```Data```                                         |
 | UNION name     | PascalCase | NoPrefix      | ```Control```                                         |
 
-
-
-> **Member naming**
+### Member naming
 
 |      Variable section      |  Notation  |  Prefix   |            Example            |
 | :------------------------- | :--------- | :-------- | :---------------------------- |
@@ -54,7 +52,7 @@ These library projects use exclusively Structured Test (ST) language.
 | REFERENCE name Declaration | camelCase  | ```ref``` | ```refDrive```                |
 | POINTER Declaration        | camelCase  | ```p```   | ```pCyclinder```              |
 
-> **Variable naming**
+### Variable naming
 
 | Variable section | Notation  |  Prefix   |                                  Example                                  |
 | :--------------- | :-------- | :-------- | :------------------------------------------------------------------------ |
@@ -66,7 +64,7 @@ These library projects use exclusively Structured Test (ST) language.
 | VAR_INST         | camelCase | ```_```   | ```_actualPosition  : LREAL``` , ```_advancedCyclinder : fbCyclinder```   |
 | VAR CONSTANT     | UpperCase | NoPrefix  | ```MAX_747_CRUISING_ALTITUDE```                                           |
 
-> **Features to avoid**
+### Features to avoid
 
 | Avoid  | Use instead |
 | :----- | :---------- |
@@ -84,19 +82,18 @@ Constants should be ALLCAPS...
 
 ### GVLs, PRGs and Parameters lists
 
-Generally, global scope should be avoided where possible. 
-GVLs, PRGs and Parameter lists must specify ```{attribute 'qualified_only'}``` to ensure access is fully scoped in the code. [Beckhoff Infosys Doc here](https://infosys.beckhoff.com/english.php?content=../content/1033/tc3_plc_intro/9007201784510091.html&id=8098035924341237087).
+Generally, global scope should be avoided where possible. GVLs, PRGs and Parameter lists must specify ```{attribute 'qualified_only'}``` to ensure access is fully scoped in the code. [Beckhoff Infosys Doc here](https://infosys.beckhoff.com/english.php?content=../content/1033/tc3_plc_intro/9007201784510091.html&id=8098035924341237087).
 
-GVLs, PRGs must not be accessible from outside the library and must use access modifier ```INTERNAL```.
-Setting / modifying GVL variables should be done through static helpers or functions.
+GVLs, PRGs must not be accessible from outside the library and must use access modifier ```INTERNAL```. Setting / modifying GVL variables should be done through static helpers or functions.
 
 ### Constants
 
-Where magic numbers are required for low level domain specific operation, these should be managed in the highest level block that makes sense without breaking an abstraction layer. I.e. Do not add ```SiemensTempSensorModBusStatusWordRegister : WORD:= 3;``` to a GVL of constants. Add this to the appropriate class that handles that device.
+Where magic numbers are required for low level domain specific operation, these should be managed in the highest level block that makes sense without breaking an abstraction layer. I.e. do not add ```SiemensTempSensorModBusStatusWordRegister : WORD:= 3;``` to a GVL of constants. Add this to the appropriate class that handles that device.
 
 Where sizing of types may change depending on the use of the library, a [Parameter List](https://infosys.beckhoff.com/english.php?content=../content/1033/tc3_plc_intro/18014401980319499.html&id=6895410617442004539) is preferred. This allows the library to be design-time condfigured without modification of the library. Keep the parameterlist as tightly scoped as possible, and as close (in the solution hierarchy) as possible.
 
 i.e. 
+
 ```Pascal
 // DrivesParams is a Parameter List, as array size needs to be flexible
 drives : ARRAY[1..DrivesParams.NumberOfDrives] OF FB_Drive;
@@ -106,40 +103,38 @@ drives : ARRAY[1..DrivesParams.NumberOfDrives] OF FB_Drive;
 
 Variables defined in referenced libraries must be declared using fully qualified name with namespace.
 
-~~~ Pascal
+```Pascal
 VAR
     _mixer : fbMixer; // AVOID!
     _mixer : Mixers.fbMixer; // Like this
 END_VAR
-~~~
+```
 
 ## Methods
 
 Methods names should clearly state the intent. Method name should not have any prefix (with exception for testing methods). Methods in components should be used to perform an action (Movement, Measurement, Trigger etc.)
 
 ```Pascal
-    piston.MoveToWork();
-    laser.Measure();
-    dmcReader.Trigger();
+piston.MoveToWork();
+laser.Measure();
+dmcReader.Trigger();
 ```
 
-### Properties
+## Properties
 
-Property name should clearly describe intent. In general the name
+Property name should clearly describe intent. 
 
-Properties should **NOT** begin with prop like Beckhoff sample code demonstrates.  We already know that these objects are properties in the way they are exposed.  
+Properties should **NOT** begin with prop like Beckhoff sample code demonstrates. We already know that these objects are properties in the way they are exposed.  
 // TODO talk with the group about property naming
 ex. bBooleanProperty, BooleanProperty p_BooleanProperty
 
 ## Fluent Interfaces
 
-It is possible in TwinCAT to create classes with fluent interfaces by returning an instance of the class (THIS^ in TwinCAT) in each method.  This allows chaining method calls together.  An example of this can be seen in Gerhard Barteling's blog post <https://www.plccoder.com/fluent-code/>.  This offers a very clean interface and usage pattern, especially in utility classes.
-
+It is possible in TwinCAT to create classes with fluent interfaces by returning an instance of the class (`THIS^` in TwinCAT) in each method.  This allows chaining method calls together. An example of this can be seen in [Gerhard Barteling's blog post](https://www.plccoder.com/fluent-code/).  This pattern offers a very clean interface and usage pattern, especially in utility classes.
 
 ## Function Block parameter transfer
 
-Whenever a parameter transfer is required during construction of a class use ```FB_Init``` method
-For cyclical update of parameters VAR_INPUT/OUTPUT/IN_OUT that are called.
+Whenever a parameter transfer is required during construction of a class use `FB_Init` method. For cyclical update of parameters `VAR_INPUT`/`OUTPUT`/`IN_OUT` that are called.
 
 ## Static classes
 
@@ -147,23 +142,23 @@ For entry point of static classes and function use PROGRAMs or GVLs.
 
 ## Pointers
 
-In general avoid use of pointers, use REFERENCE TO whenever possible. However, pointers are allowed in specific instances. The use of pointers must be approved and reviewed by the owners of the repository.
+In general avoid use of pointers, use `REFERENCE TO` whenever possible. However, pointers are allowed in specific instances. Its usage must be approved and reviewed by the owners of the repository.
 
 ## Allocated variables (```AT %I* %Q*```)
 
-All allocated variables should be defined in GVL (typically named ```IO```). GVL containing allocated variable should be used exclusively for the variables that are intended to map physical hardware. Such GVL should be structured in a way that resembles distribution and topology of actual hardware.
+All allocated variables should be defined in GVL (typically named `IO`). GVL containing allocated variable should be used exclusively for the variables that are intended to map physical hardware. Such GVL should be structured in a way that resembles distribution and topology of actual hardware.
 
-## Member Variables
+## Member variables
 
 Class (FB) member variables should begin with underscore ```_``` followed the variable name.
 
-~~~Pascal
-    VAR
-        _Trigger : BOOL;
-        _Counter : INT;
-        _AnalogStatus : AnalogStatus;
-    END_VAR
-~~~
+```Pascal
+VAR
+    _trigger : BOOL;
+    _counter : INT;
+    _analogStatus : AnalogStatus;
+END_VAR
+```
 
 ## Components
 
@@ -171,13 +166,13 @@ Component is any class of which the purpose is to control and describe a physica
 
 Component must not contain application specific code to be reusable by other consumers. Components must also allow to be extended by the consumers.
 
-* Component must inherit from ```fbComponent```
-* Component must not be marked FINAL (sealed)
-* Component should implement appropriate ```INTERFACE``` for public contract
-* Component members must explicitly state access modifier (```PUBLIC```, ```INTERNAL```, ```PROTECTED```, or ```PRIVATE```)
-* Component should properly hide implementation details by marking methods preferably ```PROTECTED```.
-* Consider use of ```PRIVATE``` access modifier to prevent any access to that member if you deem it necessary, be aware though that private members cannot be overridden by the class that inherits your component and consumers will not be able to change
-* Component's testing methods must be marked ```INTERNAL```. Testing classes/members that are in a separate testing project can be ```PUBLIC```.
+* Component must inherit from `fbComponent`
+* Component must not be marked `FINAL` (sealed)
+* Component should implement appropriate `INTERFACE` for public contract
+* Component members must explicitly state access modifier (`PUBLIC`, `INTERNAL`, `PROTECTED`, or `PRIVATE`)
+* Component should properly hide implementation details by marking methods preferably `PROTECTED`.
+* Consider use of `PRIVATE` access modifier to prevent any access to that member if you deem it necessary, be aware though that private members cannot be overridden by the class that inherits your component and consumers will not be able to change
+* Component's testing methods must be marked `INTERNAL`. Testing classes/members that are in a separate testing project can be `PUBLIC`.
 
 ## Cyclic call
 
@@ -185,7 +180,7 @@ Each component implements logic that is required to run cyclically in the *body*
 
 ### Components methods
 
-The methods **MUST** return BOOL value where ```true``` indicates the process was completed. (?? or complex return type that would provide information about the state of the component??).
+The methods **MUST** return a `BOOL` value where `TRUE` indicates the process was completed. (?? or complex return type that would provide information about the state of the component??).
 
 ```Pascal
  // Simple example of state driven by return values from components. Piston return true when _work or _home position sensor are reached respectively.
